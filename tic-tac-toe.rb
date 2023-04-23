@@ -28,26 +28,24 @@ class Board
     end
 
     def move(row, col)
+
+        # TODO: better placed in a Game class that handles inter-move logic
         sts = self.status
         if sts != M
             raise GameOver.new "Game over. " + sts + " wins."
         end
+
         char = @turn
-        # print ["move", row, col, char], "\n"
         cells = Array.new
-        # print @cells, "\n"
         for rw in (0..2)
             cells.push(Array.new)
             for cl in (0..2)
-                # print [rw, cl, (rw == row) && (cl == col), @cells[rw][cl]], "\n"
                 if (rw == row) && (cl == col)
                     ch = char
                 else
                     ch = @cells[rw][cl]
                 end
-                # print ch, " "
                 cells[rw].push(ch)
-                # print cells, "\n"
             end
         end
         if @turn == X
@@ -88,20 +86,17 @@ class Board
     end
 
     def status
-        # check for row-wise 3 in a row
         for player in [X, O]
             for row in self.rows
                 if row.all? { |c| c == player }
                     return player
                 end
             end
-            # check for col-wise 3 in a row
             for col in self.cols
                 if col.all? { |c| c == player }
                     return player
                 end
             end
-            # check for diagonal 3 in a row
             for diag in self.diags
                 if diag.all? { |c| c == player }
                     return player
