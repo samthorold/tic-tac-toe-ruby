@@ -4,82 +4,126 @@ X = "x"
 O = "o"
 M = "."
 
-def string(board)
-    s = ""
-    for row in board
-        for c in row
-            s += c
+class GameOver < StandardError
+end
+
+class Board
+    def initialize(cells=nil, turn=X)
+        if cells == nil
+            cells = Array.new(3, Array.new(3, M))
         end
-        s += "\n"
+        @turn = turn
+        @cells = cells
     end
-    s
-end
 
-def move(board, row, col, char)
-    board = board.map(&:clone)
-    board[row][col] = char
-    board
-end
-
-def row(board, i)
-    board[i]
-end
-
-def col(board, i)
-    cl = Array.new
-    for row in (0..2)
-        cl.push(board[row][i])
+    def string
+        s = ""
+        for row in self.rows
+            for c in row
+                s += c
+            end
+            s += "\n"
+        end
+        s
     end
-    cl
-end
 
-def diag(board, top_left)
-    if top_left
-        return [board[0][0], board[1][1], board[2][2]]
-    end
-    [board[2][0], board[1][1], board[0][2]]
-end
-
-def status(board)
-    # check for row-wise 3 in a row
-    for player in [X, O]
+    def move(row, col)
+        sts = self.status
+        if sts != M
+            raise GameOver.new "Game over. " + sts + " wins."
+        end
+        char = @turn
+        # print ["move", row, col, char], "\n"
+        cells = Array.new
+        # print @cells, "\n"
         for rw in (0..2)
-            if row(board, rw).all? { |c| c == player }
-                return player
+            cells.push(Array.new)
+            for cl in (0..2)
+                # print [rw, cl, (rw == row) && (cl == col), @cells[rw][cl]], "\n"
+                if (rw == row) && (cl == col)
+                    ch = char
+                else
+                    ch = @cells[rw][cl]
+                end
+                # print ch, " "
+                cells[rw].push(ch)
+                # print cells, "\n"
             end
         end
-        # check for col-wise 3 in a row
-        for cl in (0..2)
-            if col(board, cl).all? { |c| c == player }
-                return player
-            end
+        if @turn == X
+            turn = O
+        else
+            turn = X
         end
-        # check for diagonal 3 in a row
-        if diag(board, true).all? { |c| c == player }
-            return player
-        end
-        if diag(board, false).all? { |c| c == player }
-            return player
-        end
+        Board.new(cells, turn)
     end
-    M
+
+    def rows
+        rws = Array.new
+        for row in (0..2)
+            rws.push(Array.new)
+            for col in (0..2)
+                rws[row].push(@cells[row][col])
+            end
+        end
+        rws
+    end
+
+    def cols
+        cls = Array.new
+        for col in (0..2)
+            cls.push(Array.new)
+            for row in (0..2)
+                cls[col].push(@cells[row][col])
+            end
+        end
+        cls
+    end
+
+    def diags
+        dgs = Array.new
+        dgs.push([@cells[0][0], @cells[1][1], @cells[2][2]])
+        dgs.push([@cells[2][0], @cells[1][1], @cells[0][2]])
+        dgs
+    end
+
+    def status
+        # check for row-wise 3 in a row
+        for player in [X, O]
+            for row in self.rows
+                if row.all? { |c| c == player }
+                    return player
+                end
+            end
+            # check for col-wise 3 in a row
+            for col in self.cols
+                if col.all? { |c| c == player }
+                    return player
+                end
+            end
+            # check for diagonal 3 in a row
+            for diag in self.diags
+                if diag.all? { |c| c == player }
+                    return player
+                end
+            end
+        end
+        M
+    end
 end
 
-board = Array.new(3, Array.new(3, M))
+
+board = Board.new
 
 print board, "\n"
 
-print string(board), "\n"
+print board.string, "\n"
 
-board = move(board, 0, 0, X)
-print string(board)
-print status(board), "\n\n"
-
-board = move(board, 0, 1, X)
-print string(board)
-print status(board), "\n\n"
-
-board = move(board, 0, 2, X)
-print string(board)
-print status(board), "\n\n"
+for row in (0..2)
+    for col in (0..2)
+        board = board.move(row, col)
+        print board.string
+        print board.status, "\n\n"
+    end
+end
 
